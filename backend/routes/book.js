@@ -7,4 +7,5 @@ const router = express.Router();
 router.get("/", bookCtrl.getAllBooks);
 // Route pour ajouter un livre
 router.post("/", auth, multer, bookCtrl.createBook);
+router.get("/:id", bookCtrl.getBookById);
 module.exports = router;
