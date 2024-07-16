@@ -6,9 +6,8 @@ const router = express.Router();
 
 router.get("/", bookCtrl.getAllBooks);
 router.post("/", auth, multer, bookCtrl.createBook);
+router.get("/bestrating", bookCtrl.getBestRatedBooks);
 router.get("/:id", bookCtrl.getBookById);
-
-// router.get("/bestrating", bookCtrl.getBestRatedBooks);
 router.delete("/:id", auth, bookCtrl.deleteBook);
 router.put("/:id", auth, bookCtrl.modifyBook);
 module.exports = router;

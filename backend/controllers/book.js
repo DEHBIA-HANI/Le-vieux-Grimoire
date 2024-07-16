@@ -57,24 +57,23 @@ exports.getBookById = async (req, res) => {
       .json({ message: "Erreur lors de la récupération du livre." });
   }
 };
-// exports.getBestRatedBooks = async (req, res) => {
-//   try {
-//     // Trouver les 3 livres avec la meilleure note moyenne
-//     const books = await Book.find().sort({ averageRating: -1 }).limit(3);
-//     res.status(200).json(books);
-//   } catch (error) {
-//     console.error(
-//       "Erreur lors de la récupération des livres avec les meilleurs notes.",
-//       error
-//     );
-//     res
-//       .status(500)
-//       .json({
-//         message:
-//           "Erreur lors de la récupération des livres avec les meilleurs notes.",
-//       });
-//   }
-// };
+exports.getBestRatedBooks = async (req, res) => {
+  try {
+    // Trouver les 3 livres avec la meilleure note moyenne
+    const books = await Book.find().sort({ averageRating: -1 }).limit(3);
+
+    res.status(200).json(books);
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des livres avec les meilleurs notes.",
+      error
+    );
+    res.status(500).json({
+      message:
+        "Erreur lors de la récupération des livres avec les meilleurs notes.",
+    });
+  }
+};
 
 // Supprimer un livre par son ID
 exports.deleteBook = async (req, res) => {
