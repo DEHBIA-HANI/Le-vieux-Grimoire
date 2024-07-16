@@ -85,7 +85,6 @@ exports.deleteBook = async (req, res) => {
       return res.status(404).json({ message: "Livre non trouvé" });
     }
     if (book.userId !== req.auth.userId) {
-      console.log("bookid", book.userId);
       return res.status(401).json({ message: "Non autorisé" });
     }
     const filename = book.imageUrl.split("/images/")[1];
@@ -103,5 +102,44 @@ exports.deleteBook = async (req, res) => {
     res
       .status(500)
       .json({ message: "Erreur lors de la suppression du livre." });
+  }
+};
+exports.modifyBook = async (req, res) => {
+  try {
+    const bookObject = req.file
+      ? {
+          ...JSON.parse(req.body.book),
+          imageUrl: `${req.protocol}://${req.get("host")}/images/${
+            req.file.filename
+          }`,
+        }
+      : { ...req.body };
+    delete bookObject.userId;
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: "Livre non trouvé" });
+    }
+    if (book.userId !== req.auth.userId) {
+      return res.status(401).json({ message: "Non autorisé" });
+    }
+    if (req.file) {
+      // Supprimer l'ancienne image si une nouvelle est fournie
+      const filename = book.imageUrl.split("/images/")[1];
+      fs.unlink(`images/${filename}`, (err) => {
+        if (err)
+          console.error(
+            "Erreur lors de la suppression de l'ancienne image:",
+            err
+          );
+      });
+    }
+    await Book.updateOne(
+      { _id: req.params.id },
+      { ...bookObject, _id: req.params.id }
+    );
+    res.status(200).json({ message: "Livre modifié avec succès!" });
+  } catch (error) {
+    console.error("Erreur lors de la modification du livre:", error);
+    res.status(500).send("Erreur lors de la modification du livre.");
   }
 };
