@@ -142,3 +142,44 @@ exports.modifyBook = async (req, res) => {
     res.status(500).send("Erreur lors de la modification du livre.");
   }
 };
+exports.postRating = async (req, res) => {
+  try {
+    // Récupérer
+    const userId = req.auth.userId;
+    const rating = req.body.rating;
+    const id = req.params.id;
+    // Vérifier si l'ID du livre est valide
+    if (!id || id === "undefined") {
+      return res.status(400).json({ message: "ID de livre non valide." });
+    }
+    // Rechercher le livre par ID
+    const book = await Book.findById(id);
+    if (!book) {
+      return res.status(404).json({ message: "Livre non trouvé." });
+    }
+    // Vérifier si l'utilisateur a déjà noté ce livre
+    const alreadyRating = book.ratings.find((r) => r.userId === userId);
+    if (alreadyRating) {
+      return res.status(400).json({ message: "Vous avez déjà noté ce livre." });
+    }
+    // Ajouter la nouvelle note à la liste des notes du livre
+    const newRating = { userId: userId, grade: rating };
+    book.ratings.push(newRating);
+
+    // Calculer la nouvelle moyenne des notes
+    const totalRatings = book.ratings.length;
+    const sumRatings = book.ratings.reduce(
+      (sum, rating) => sum + rating.grade,
+      0
+    );
+    book.averageRating = sumRatings / totalRatings;
+    // Sauvegarder les modifications du livre dans la base de données
+    await book.save();
+    return res.status(200).json(book);
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la note du livre :", error);
+    return res.status(500).json({
+      message: "Erreur lors de la mise à jour de la note du livre.",
+    });
+  }
+};
