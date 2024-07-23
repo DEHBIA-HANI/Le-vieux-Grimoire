@@ -1,5 +1,7 @@
-const fs = require("fs");
+const fs = require("fs").promises;
+const { log } = require("console");
 const Book = require("../models/Book");
+const path = require("path");
 
 exports.getAllBooks = async (req, res) => {
   try {
@@ -25,14 +27,12 @@ exports.createBook = async (req, res) => {
       author,
       year,
       genre,
-      imageUrl: `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`,
+      imageUrl: `${req.protocol}://${req.get("host")}/${req.file.path}`,
       ratings: ratings || [],
       averageRating: averageRating || 0,
     });
-    await newBook.save();
 
+    await newBook.save();
     res.status(201).json({ message: "Livre enregistré avec succès!" });
   } catch (error) {
     console.error("Erreur lors de l'enregistrement du livre:", error);
@@ -79,7 +79,6 @@ exports.getBestRatedBooks = async (req, res) => {
 exports.deleteBook = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
-
     if (!book) {
       return res.status(404).json({ message: "Livre non trouvé" });
     }
@@ -87,15 +86,18 @@ exports.deleteBook = async (req, res) => {
       return res.status(401).json({ message: "Non autorisé" });
     }
     const filename = book.imageUrl.split("/images/")[1];
-    fs.unlink(`images/${filename}`, async (err) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: "Erreur lors de la suppression de l'image" });
-      }
-      await Book.deleteOne({ _id: req.params.id });
-      res.status(200).json({ message: "Livre supprimé avec succès!" });
-    });
+    const filePath = `images/${filename}`; // Chemin relatif
+
+    // Supprimer le fichier de l'image
+    try {
+      await fs.unlink(filePath);
+      console.log("Image supprimée avec succès");
+    } catch (err) {
+      console.error("Erreur lors de la suppression de l'image:", err);
+    }
+    // Supprimer le livre de la base de données
+    await Book.deleteOne({ _id: req.params.id });
+    res.status(200).json({ message: "Livre supprimé avec succès!" });
   } catch (error) {
     console.error("Erreur lors de la suppression du livre:", error);
     res
@@ -105,15 +107,6 @@ exports.deleteBook = async (req, res) => {
 };
 exports.modifyBook = async (req, res) => {
   try {
-    const bookObject = req.file
-      ? {
-          ...JSON.parse(req.body.book),
-          imageUrl: `${req.protocol}://${req.get("host")}/images/${
-            req.file.filename
-          }`,
-        }
-      : { ...req.body };
-    delete bookObject.userId;
     const book = await Book.findById(req.params.id);
     if (!book) {
       return res.status(404).json({ message: "Livre non trouvé" });
@@ -121,25 +114,48 @@ exports.modifyBook = async (req, res) => {
     if (book.userId !== req.auth.userId) {
       return res.status(401).json({ message: "Non autorisé" });
     }
+    const updatedBookData = { ...JSON.parse(req.body.book) };
+
     if (req.file) {
       // Supprimer l'ancienne image si une nouvelle est fournie
-      const filename = book.imageUrl.split("/images/")[1];
-      fs.unlink(`images/${filename}`, (err) => {
-        if (err)
-          console.error(
-            "Erreur lors de la suppression de l'ancienne image:",
-            err
-          );
-      });
+      const oldImageFilename = path.basename(book.imageUrl);
+      const oldImagePath = path.normalize(
+        path.join("images", oldImageFilename)
+      );
+      console.log("Ancien chemin de fichier:", oldImagePath);
+
+      try {
+        await fs.unlink(oldImagePath);
+      } catch (err) {
+        console.error(
+          "Erreur lors de la suppression de l'ancienne image:",
+          err
+        );
+      }
+      updatedBookData.imageUrl = `${req.protocol}://${req.get(
+        "host"
+      )}/images/${path.basename(req.file.path)}`;
     }
-    await Book.updateOne(
+    //  else {
+    //   updatedBookData.imageUrl = book.imageUrl;
+    // }
+    console.log("Nouvelle URL de l'image:", updatedBookData.imageUrl);
+    // Mettre à jour le livre avec les nouvelles données
+    const updateResult = await Book.updateOne(
       { _id: req.params.id },
-      { ...bookObject, _id: req.params.id }
+      { ...updatedBookData }
     );
-    res.status(200).json({ message: "Livre modifié avec succès!" });
+    console.log("Livre modifié avec succès:", updateResult);
+    const updatedBook = await Book.findById(req.params.id);
+
+    res
+      .status(200)
+      .json({ message: "Livre modifié avec succès!", book: updatedBook });
   } catch (error) {
     console.error("Erreur lors de la modification du livre:", error);
-    res.status(500).send("Erreur lors de la modification du livre.");
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la modification du livre." });
   }
 };
 exports.postRating = async (req, res) => {
