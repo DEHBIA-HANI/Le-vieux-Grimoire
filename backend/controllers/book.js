@@ -1,14 +1,12 @@
 const fs = require("fs").promises;
-const { log } = require("console");
 const Book = require("../models/Book");
 const path = require("path");
 
 exports.getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find(); // Récupérer tous les livres de la base de données
+    const books = await Book.find();
     res.status(200).json(books);
   } catch (error) {
-    console.error("Erreur lors de la récupération des livres", error);
     res
       .status(500)
       .json({ message: "Erreur lors de la récupération des livres" });
@@ -35,7 +33,6 @@ exports.createBook = async (req, res) => {
     await newBook.save();
     res.status(201).json({ message: "Livre enregistré avec succès!" });
   } catch (error) {
-    console.error("Erreur lors de l'enregistrement du livre:", error);
     res
       .status(500)
       .json({ message: "Erreur lors de l'enregistrement du livre." });
@@ -105,6 +102,7 @@ exports.deleteBook = async (req, res) => {
       .json({ message: "Erreur lors de la suppression du livre." });
   }
 };
+
 exports.modifyBook = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
@@ -114,7 +112,16 @@ exports.modifyBook = async (req, res) => {
     if (book.userId !== req.auth.userId) {
       return res.status(401).json({ message: "Non autorisé" });
     }
-    const updatedBookData = { ...JSON.parse(req.body.book) };
+
+    // Créer updatedBookData en tenant compte de la présence d'un fichier image
+    const updatedBookData = req.file
+      ? {
+          ...JSON.parse(req.body.book),
+          imageUrl: `${req.protocol}://${req.get(
+            "host"
+          )}/images/${path.basename(req.file.path)}`,
+        }
+      : { ...req.body };
 
     if (req.file) {
       // Supprimer l'ancienne image si une nouvelle est fournie
@@ -122,7 +129,6 @@ exports.modifyBook = async (req, res) => {
       const oldImagePath = path.normalize(
         path.join("images", oldImageFilename)
       );
-      console.log("Ancien chemin de fichier:", oldImagePath);
 
       try {
         await fs.unlink(oldImagePath);
@@ -132,20 +138,11 @@ exports.modifyBook = async (req, res) => {
           err
         );
       }
-      updatedBookData.imageUrl = `${req.protocol}://${req.get(
-        "host"
-      )}/images/${path.basename(req.file.path)}`;
     }
-    //  else {
-    //   updatedBookData.imageUrl = book.imageUrl;
-    // }
-    console.log("Nouvelle URL de l'image:", updatedBookData.imageUrl);
+
     // Mettre à jour le livre avec les nouvelles données
-    const updateResult = await Book.updateOne(
-      { _id: req.params.id },
-      { ...updatedBookData }
-    );
-    console.log("Livre modifié avec succès:", updateResult);
+    await Book.updateOne({ _id: req.params.id }, { ...updatedBookData });
+
     const updatedBook = await Book.findById(req.params.id);
 
     res

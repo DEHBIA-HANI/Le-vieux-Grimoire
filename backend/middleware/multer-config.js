@@ -31,11 +31,12 @@ const upload = multer({ storage }).single("image");
 
 // Middleware pour redimensionner l'image après le téléchargement
 const resizeImage = async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).send("Aucun fichier téléchargé.");
-    }
+  console.log(req.body);
+  if (!req.file) {
+    return next();
+  }
 
+  try {
     const filePath = req.file.path; // Chemin du fichier d'origine
     const filename = req.file.filename; // Nom du fichier d'origine
     const outputPath = path.join(
