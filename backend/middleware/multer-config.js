@@ -1,7 +1,7 @@
 const multer = require("multer");
 const sharp = require("sharp");
 const path = require("path");
-const fs = require("fs").promises; // Utilisation de la version promises de fs pour une gestion des erreurs plus propre
+const fs = require("fs").promises;
 
 // Définir les types MIME supportés
 const MIME_TYPES = {
@@ -12,17 +12,13 @@ const MIME_TYPES = {
 
 // Configuration du stockage pour multer
 const storage = multer.diskStorage({
-  // Définir le répertoire de destination pour les fichiers téléchargés
   destination: (req, file, callback) => {
-    callback(null, "images"); // Répertoire de stockage des images
+    callback(null, "images");
   },
-
-  // Définir le nom du fichier
   filename: (req, file, callback) => {
-    // Remplacer les espaces par des underscores et générer un nom unique en ajoutant un timestamp
     const name = file.originalname.split(" ").join("_");
-    const extension = MIME_TYPES[file.mimetype]; // Obtenir l'extension basée sur le type MIME
-    callback(null, `${name}_${Date.now()}.${extension}`); // Nom du fichier final
+    const extension = MIME_TYPES[file.mimetype];
+    callback(null, `${name}_${Date.now()}.${extension}`);
   },
 });
 
@@ -31,14 +27,12 @@ const upload = multer({ storage }).single("image");
 
 // Middleware pour redimensionner l'image après le téléchargement
 const resizeImage = async (req, res, next) => {
-  console.log(req.body);
   if (!req.file) {
     return next();
   }
-
   try {
-    const filePath = req.file.path; // Chemin du fichier d'origine
-    const filename = req.file.filename; // Nom du fichier d'origine
+    const filePath = req.file.path;
+    const filename = req.file.filename;
     const outputPath = path.join(
       "images",
       `resized_${path.parse(filename).name}.webp`
@@ -46,10 +40,9 @@ const resizeImage = async (req, res, next) => {
 
     // Redimensionner l'image
     await sharp(filePath)
-      .resize({ width: 200, height: 260, fit: "cover" }) // Dimensions et ajustement de l'image
+      .resize({ width: 200, height: 260, fit: "cover" })
       .toFormat("webp")
-      .toFile(outputPath), // Stocker l'image redimensionnée
-      // Supprimer l'image d'origine
+      .toFile(outputPath),
       await fs.unlink(filePath);
 
     // Mettre à jour le chemin du fichier dans la requête pour pointer vers l'image redimensionnée

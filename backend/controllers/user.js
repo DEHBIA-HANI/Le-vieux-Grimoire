@@ -26,12 +26,15 @@ exports.signup = async (req, res) => {
     // Envoyer une réponse réussie
     res.status(201).json({ message: "Utilisateur créé avec succès!" });
   } catch (error) {
-    // Gérer les erreurs
-    console.error("Erreur lors de la création de l'utilisateur :", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la création de l'utilisateur." });
+    res.status(500).json({ error });
   }
+  // catch (error) {
+  //   // Gérer les erreurs
+  //   console.error("Erreur lors de la création de l'utilisateur :", error);
+  //   res
+  //     .status(500)
+  //     .json({ message: "Erreur lors de la création de l'utilisateur." });
+  // }
 };
 
 exports.login = async (req, res) => {
@@ -62,10 +65,13 @@ exports.login = async (req, res) => {
     // Envoyer une réponse avec le token et l'ID de l'utilisateur
     res.status(200).json({ userId: user._id, token });
   } catch (error) {
-    // Gérer les erreurs
-    console.error("Erreur lors de la connexion de l'utilisateur :", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la connexion de l'utilisateur." });
+    res.status(500).json({ error });
   }
+  //  catch (error) {
+  //   // Gérer les erreurs
+  //   console.error("Erreur lors de la connexion de l'utilisateur :", error);
+  //   res
+  //     .status(500)
+  //     .json({ message: "Erreur lors de la connexion de l'utilisateur." });
+  // }
 };
