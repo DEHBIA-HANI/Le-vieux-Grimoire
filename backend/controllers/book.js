@@ -114,7 +114,6 @@ exports.modifyBook = async (req, res) => {
     if (book.userId !== req.auth.userId) {
       return res.status(403).json({ message: "Demande non autorisé" });
     }
-
     // Créer updatedBookData en tenant compte de la présence d'un fichier image
     const updatedBookData = req.file
       ? {
@@ -124,13 +123,13 @@ exports.modifyBook = async (req, res) => {
           )}/images/${path.basename(req.file.path)}`,
         }
       : { ...req.body };
-
     if (req.file) {
       // Supprimer l'ancienne image si une nouvelle est fournie
       const oldImageFilename = path.basename(book.imageUrl);
       const oldImagePath = path.normalize(
         path.join("images", oldImageFilename)
       );
+
       try {
         await fs.unlink(oldImagePath);
       } catch (err) {
@@ -140,7 +139,6 @@ exports.modifyBook = async (req, res) => {
         );
       }
     }
-
     // Mettre à jour le livre avec les nouvelles données
     await Book.updateOne({ _id: req.params.id }, { ...updatedBookData });
     const updatedBook = await Book.findById(req.params.id);
