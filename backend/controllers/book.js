@@ -94,7 +94,7 @@ exports.deleteBook = async (req, res) => {
       return res.status(404).json({ message: "Livre non trouvé" });
     }
     if (book.userId !== req.auth.userId) {
-      return res.status(401).json({ message: "Non autorisé" });
+      return res.status(403).json({ message: "Demande non autorisé" });
     }
     const filename = book.imageUrl.split("/images/")[1];
     const filePath = `images/${filename}`; // Chemin relatif
@@ -110,14 +110,11 @@ exports.deleteBook = async (req, res) => {
     await Book.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Livre supprimé avec succès!" });
   } catch (error) {
-    res.status(500).json({ error });
+    console.error("Erreur lors de la suppression du livre:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la suppression du livre." });
   }
-  //  catch (error) {
-  //   console.error("Erreur lors de la suppression du livre:", error);
-  //   res
-  //     .status(500)
-  //     .json({ message: "Erreur lors de la suppression du livre." });
-  // }
 };
 
 exports.modifyBook = async (req, res) => {
@@ -127,7 +124,7 @@ exports.modifyBook = async (req, res) => {
       return res.status(404).json({ message: "Livre non trouvé" });
     }
     if (book.userId !== req.auth.userId) {
-      return res.status(401).json({ message: "Non autorisé" });
+      return res.status(403).json({ message: "Demande non autorisé" });
     }
 
     // Créer updatedBookData en tenant compte de la présence d'un fichier image
@@ -166,14 +163,11 @@ exports.modifyBook = async (req, res) => {
       .status(200)
       .json({ message: "Livre modifié avec succès!", book: updatedBook });
   } catch (error) {
-    res.status(500).json({ error });
+    console.error("Erreur lors de la modification du livre:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la modification du livre." });
   }
-  // catch (error) {
-  //   console.error("Erreur lors de la modification du livre:", error);
-  //   res
-  //     .status(500)
-  //     .json({ message: "Erreur lors de la modification du livre." });
-  // }
 };
 exports.postRating = async (req, res) => {
   try {
@@ -210,12 +204,9 @@ exports.postRating = async (req, res) => {
     await book.save();
     return res.status(200).json(book);
   } catch (error) {
-    res.status(500).json({ error });
+    console.error("Erreur lors de la mise à jour de la note du livre :", error);
+    return res.status(500).json({
+      message: "Erreur lors de la mise à jour de la note du livre.",
+    });
   }
-  //  catch (error) {
-  //   console.error("Erreur lors de la mise à jour de la note du livre :", error);
-  //   return res.status(500).json({
-  //     message: "Erreur lors de la mise à jour de la note du livre.",
-  //   });
-  // }
 };
