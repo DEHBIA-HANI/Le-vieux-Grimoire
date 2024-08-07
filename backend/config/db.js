@@ -8,5 +8,4 @@ mongoose
       process.env.CLUSTER +
       ".mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
   )
-  .then(() => console.log("Connection à MongoDB réussie !"))
   .catch((error) => console.log("Failed to connect to MongoDB", error));

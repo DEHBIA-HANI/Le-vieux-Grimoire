@@ -4,16 +4,12 @@ const path = require("path");
 
 exports.getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find(); // Récupérer tous les livres de la base de données
+    const books = await Book.find();
     res.status(200).json(books);
   } catch (error) {
-    console.error("Erreur lors de la récupération des livres", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la récupération des livres" });
+    res.status(500).json({ error });
   }
 };
-
 exports.createBook = async (req, res) => {
   try {
     const bookData = JSON.parse(req.body.book);
@@ -34,10 +30,7 @@ exports.createBook = async (req, res) => {
     await newBook.save();
     res.status(201).json({ message: "Livre enregistré avec succès!" });
   } catch (error) {
-    console.error("Erreur lors de l'enregistrement du livre:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de l'enregistrement du livre." });
+    res.status(500).json({ error });
   }
 };
 // Récupérer un livre par son ID
@@ -50,10 +43,7 @@ exports.getBookById = async (req, res) => {
     }
     res.status(200).json(book);
   } catch (error) {
-    console.error("Erreur lors de la récupération du livre:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la récupération du livre." });
+    res.status(500).json({ error });
   }
 };
 exports.getBestRatedBooks = async (req, res) => {
@@ -63,14 +53,7 @@ exports.getBestRatedBooks = async (req, res) => {
 
     res.status(200).json(books);
   } catch (error) {
-    console.error(
-      "Erreur lors de la récupération des livres avec les meilleurs notes.",
-      error
-    );
-    res.status(500).json({
-      message:
-        "Erreur lors de la récupération des livres avec les meilleurs notes.",
-    });
+    res.status(500).json({ error });
   }
 };
 
@@ -90,18 +73,12 @@ exports.deleteBook = async (req, res) => {
     // Supprimer le fichier de l'image
     try {
       await fs.unlink(filePath);
-      console.log("Image supprimée avec succès");
-    } catch (err) {
-      console.error("Erreur lors de la suppression de l'image:", err);
-    }
+    } catch {}
     // Supprimer le livre de la base de données
     await Book.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Livre supprimé avec succès!" });
   } catch (error) {
-    console.error("Erreur lors de la suppression du livre:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la suppression du livre." });
+    res.status(500).json({ error });
   }
 };
 
@@ -132,12 +109,7 @@ exports.modifyBook = async (req, res) => {
 
       try {
         await fs.unlink(oldImagePath);
-      } catch (err) {
-        console.error(
-          "Erreur lors de la suppression de l'ancienne image:",
-          err
-        );
-      }
+      } catch (err) {}
     }
     // Mettre à jour le livre avec les nouvelles données
     await Book.updateOne({ _id: req.params.id }, { ...updatedBookData });
@@ -146,10 +118,7 @@ exports.modifyBook = async (req, res) => {
       .status(200)
       .json({ message: "Livre modifié avec succès!", book: updatedBook });
   } catch (error) {
-    console.error("Erreur lors de la modification du livre:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur lors de la modification du livre." });
+    res.status(500).json({ error });
   }
 };
 exports.postRating = async (req, res) => {
@@ -187,9 +156,6 @@ exports.postRating = async (req, res) => {
     await book.save();
     return res.status(200).json(book);
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la note du livre :", error);
-    return res.status(500).json({
-      message: "Erreur lors de la mise à jour de la note du livre.",
-    });
+    res.status(500).json({ error });
   }
 };

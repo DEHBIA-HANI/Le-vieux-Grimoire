@@ -15,6 +15,4 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/api/auth", userRouter);
 app.use("/api/books", bookRouter);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Listening on port ${process.env.PORT}`);
-});
+app.listen(process.env.PORT);
