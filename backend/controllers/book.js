@@ -73,7 +73,9 @@ exports.deleteBook = async (req, res) => {
     // Supprimer le fichier de l'image
     try {
       await fs.unlink(filePath);
-    } catch {}
+    } catch (err) {
+      res.status(500).json(err);
+    }
     // Supprimer le livre de la base de données
     await Book.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "Livre supprimé avec succès!" });
@@ -109,7 +111,9 @@ exports.modifyBook = async (req, res) => {
 
       try {
         await fs.unlink(oldImagePath);
-      } catch (err) {}
+      } catch (err) {
+        res.status(500).json(err);
+      }
     }
     // Mettre à jour le livre avec les nouvelles données
     await Book.updateOne({ _id: req.params.id }, { ...updatedBookData });
