@@ -10,11 +10,14 @@ exports.getAllBooks = async (req, res) => {
     res.status(500).json({ error });
   }
 };
+
 exports.createBook = async (req, res) => {
   try {
-    const bookData = JSON.parse(req.body.book);
+    const bookData = JSON.parse(req.body.book); // Log des données du livre
+
     const { userId, title, author, year, genre, ratings, averageRating } =
       bookData;
+
     // Création de l'objet livre
     const newBook = new Book({
       userId,
@@ -30,7 +33,8 @@ exports.createBook = async (req, res) => {
     await newBook.save();
     res.status(201).json({ message: "Livre enregistré avec succès!" });
   } catch (error) {
-    res.status(500).json({ error });
+    console.error("Erreur lors de la création du livre:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 // Récupérer un livre par son ID

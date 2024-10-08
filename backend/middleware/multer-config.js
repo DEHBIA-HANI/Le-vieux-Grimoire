@@ -28,8 +28,10 @@ const upload = multer({ storage }).single("image");
 // Middleware pour redimensionner l'image après le téléchargement
 const resizeImage = async (req, res, next) => {
   if (!req.file) {
+    console.log("Aucun fichier uploadé.");
     return next();
   }
+
   try {
     const filePath = req.file.path;
     const filename = req.file.filename;
@@ -38,15 +40,27 @@ const resizeImage = async (req, res, next) => {
       `resized_${path.parse(filename).name}.webp`
     );
 
-    // Redimensionner l'image
+    console.log("Redimensionnement de l'image en cours...");
     await sharp(filePath)
       .resize({ width: 200, height: 260, fit: "cover" })
       .toFormat("webp")
-      .toFile(outputPath),
-      await fs.unlink(filePath);
+      .toFile(outputPath);
 
-    // Mettre à jour le chemin du fichier dans la requête pour pointer vers l'image redimensionnée
+    console.log(
+      "Image redimensionnée avec succès, tentative de suppression du fichier original..."
+    );
+
+    // Vérifier l'accès au fichier avant de le supprimer
+    try {
+      await fs.access(filePath); // Vérifie si le fichier est accessible
+      await fs.unlink(filePath);
+      console.log("Fichier original supprimé avec succès.");
+    } catch (accessError) {
+      console.error("Erreur d'accès au fichier:", accessError);
+    }
+
     req.file.path = outputPath.replace(/\\/g, "/");
+    req.file.filename = path.basename(outputPath);
 
     next();
   } catch (error) {
